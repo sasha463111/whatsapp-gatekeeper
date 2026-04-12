@@ -1,0 +1,14 @@
+{
+  "name": "whatsapp-link-gatekeeper",
+  "version": "1.0.0",
+  "description": "WhatsApp group link gatekeeper - validates users against an approved list",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.0"
+  }
+}

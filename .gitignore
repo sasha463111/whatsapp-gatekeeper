@@ -1,0 +1,5 @@
+node_modules/
+gatekeeper.db
+gatekeeper.db-wal
+gatekeeper.db-shm
+.env
