@@ -6,11 +6,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "postinstall": "node -e \"try { require('puppeteer').executablePath() && console.log('puppeteer ok'); } catch(e) { console.log('puppeteer install skipped'); }\""
+    "postinstall": "node node_modules/puppeteer/install.mjs || true"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
     "express": "^4.21.0",
+    "puppeteer": "^23.11.1",
     "qrcode": "^1.5.4",
     "whatsapp-web.js": "^1.26.0"
   }

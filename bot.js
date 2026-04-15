@@ -13,6 +13,15 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
 const db = require('./database');
 
+// Resolve Chromium path: prefer the one puppeteer installs into its cache.
+// Falls back to undefined (let whatsapp-web.js handle it) if puppeteer isn't installed.
+let chromePath;
+try {
+  chromePath = require('puppeteer').executablePath();
+} catch (_) {
+  chromePath = undefined;
+}
+
 // ---- State ----
 let client = null;
 let status = 'disconnected'; // 'disconnected' | 'qr' | 'authenticating' | 'ready' | 'error'
@@ -107,6 +116,7 @@ function start() {
     authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
     puppeteer: {
       headless: true,
+      executablePath: chromePath, // undefined → let puppeteer find its own
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
