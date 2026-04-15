@@ -7,3 +7,6 @@ gatekeeper.db-shm
 approved-phones.json
 # Local helper, not needed in deployment
 parse-csv.js
+# WhatsApp Web session (contains auth tokens — never commit)
+.wwebjs_auth/
+.wwebjs_cache/

@@ -169,6 +169,58 @@
       </thead>
       <tbody id="logBody"></tbody>
     </table>
+
+    <h2>בוט אישור אוטומטי</h2>
+
+    <div id="botStatus" style="margin-bottom:15px;">
+      <div id="botStatusBadge" style="display:inline-block; padding:6px 14px; border-radius:14px; font-size:13px; font-weight:600; background:#eee; color:#555;">טוען...</div>
+      <span id="botStatusDetail" style="margin-right:10px; color:#555; font-size:13px;"></span>
+    </div>
+
+    <div id="botQrSection" style="display:none; text-align:center; background:#fafafa; padding:20px; border-radius:12px; margin-bottom:15px;">
+      <p style="margin-bottom:12px; color:#333; font-size:14px;">סרוק את ה-QR עם וואטסאפ בטלפון: <strong>הגדרות → מכשירים מקושרים → קישור מכשיר</strong></p>
+      <img id="botQrImg" style="max-width:260px; border:1px solid #ddd; border-radius:8px;">
+    </div>
+
+    <div id="botConfigSection" style="display:none;">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-number" id="botApprovedCount">0</div>
+          <div class="stat-label">אושרו</div>
+        </div>
+        <div class="stat-box orange">
+          <div class="stat-number" id="botRejectedCount">0</div>
+          <div class="stat-label">נדחו</div>
+        </div>
+      </div>
+
+      <label>הקבוצה הישנה (מקור — ממנה בודקים חברות)</label>
+      <select id="oldGroupSelect" style="width:100%; padding:12px; border:1.5px solid #ddd; border-radius:10px; margin-bottom:15px; font-size:15px;"></select>
+
+      <label>הקבוצה החדשה (יעד — שם מאשרים בקשות)</label>
+      <select id="newGroupSelect" style="width:100%; padding:12px; border:1.5px solid #ddd; border-radius:10px; margin-bottom:15px; font-size:15px;"></select>
+
+      <button class="btn" onclick="saveBotConfig()">שמור</button>
+      <button class="btn btn-secondary" onclick="syncPending()" style="margin-right:8px;">סרוק בקשות ממתינות</button>
+      <button class="btn btn-secondary" onclick="logoutBot()" style="margin-right:8px; background:#c62828;">נתק</button>
+    </div>
+
+    <div id="botConnectSection" style="display:none;">
+      <button class="btn" onclick="startBot()">התחבר לוואטסאפ</button>
+    </div>
+
+    <h2>יומן פעולות בוט</h2>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>טלפון</th>
+          <th>פעולה</th>
+          <th>סיבה</th>
+          <th>תאריך</th>
+        </tr>
+      </thead>
+      <tbody id="botLogBody"></tbody>
+    </table>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -249,6 +301,144 @@
         `).join('');
       }
     }
+
+    // ---- Bot management ----
+    function authHeaders() {
+      return { 'X-Admin-Password': adminPassword };
+    }
+
+    const STATUS_LABELS = {
+      disconnected: { label: 'מנותק', bg: '#ffebee', fg: '#c62828' },
+      qr: { label: 'ממתין לסריקת QR', bg: '#fff3e0', fg: '#e65100' },
+      authenticating: { label: 'מתחבר...', bg: '#e3f2fd', fg: '#1565c0' },
+      ready: { label: 'מחובר ופעיל ✓', bg: '#e8f5e9', fg: '#2e7d32' },
+      error: { label: 'שגיאה', bg: '#ffebee', fg: '#c62828' },
+    };
+
+    async function refreshBotStatus() {
+      const res = await fetch('/admin/bot/status', { headers: authHeaders() });
+      if (!res.ok) return;
+      const s = await res.json();
+      const badge = document.getElementById('botStatusBadge');
+      const detail = document.getElementById('botStatusDetail');
+      const info = STATUS_LABELS[s.status] || STATUS_LABELS.disconnected;
+      badge.textContent = info.label;
+      badge.style.background = info.bg;
+      badge.style.color = info.fg;
+
+      const qrSection = document.getElementById('botQrSection');
+      const configSection = document.getElementById('botConfigSection');
+      const connectSection = document.getElementById('botConnectSection');
+
+      if (s.status === 'qr' && s.hasQr) {
+        qrSection.style.display = 'block';
+        configSection.style.display = 'none';
+        connectSection.style.display = 'none';
+        const qrRes = await fetch('/admin/bot/qr', { headers: authHeaders() });
+        const qrData = await qrRes.json();
+        if (qrData.qr) document.getElementById('botQrImg').src = qrData.qr;
+      } else if (s.status === 'ready') {
+        qrSection.style.display = 'none';
+        configSection.style.display = 'block';
+        connectSection.style.display = 'none';
+        document.getElementById('botApprovedCount').textContent = s.approved;
+        document.getElementById('botRejectedCount').textContent = s.rejected;
+        detail.textContent = s.oldGroupName
+          ? `ישנה: ${s.oldGroupName} (${s.oldGroupMemberCount}) | חדשה: ${s.newGroupName || '—'}`
+          : 'בחר קבוצות';
+        await loadGroups(s.oldGroupId, s.newGroupId);
+      } else {
+        qrSection.style.display = 'none';
+        configSection.style.display = 'none';
+        connectSection.style.display = 'block';
+      }
+    }
+
+    async function loadGroups(currentOld, currentNew) {
+      const res = await fetch('/admin/bot/groups', { headers: authHeaders() });
+      if (!res.ok) return;
+      const groups = await res.json();
+      const options = '<option value="">-- בחר קבוצה --</option>' +
+        groups.map(g => `<option value="${g.id}">${g.name} (${g.participantCount})</option>`).join('');
+      const oldSel = document.getElementById('oldGroupSelect');
+      const newSel = document.getElementById('newGroupSelect');
+      if (!oldSel.value && !newSel.value) {
+        oldSel.innerHTML = options;
+        newSel.innerHTML = options;
+        if (currentOld) oldSel.value = currentOld;
+        if (currentNew) newSel.value = currentNew;
+      }
+    }
+
+    async function startBot() {
+      await fetch('/admin/bot/start', { method: 'POST', headers: authHeaders() });
+      showToast('מתחיל חיבור...');
+      refreshBotStatus();
+    }
+
+    async function logoutBot() {
+      if (!confirm('לנתק את הבוט? תצטרך לסרוק QR מחדש.')) return;
+      await fetch('/admin/bot/logout', { method: 'POST', headers: authHeaders() });
+      showToast('הבוט נותק');
+      refreshBotStatus();
+    }
+
+    async function saveBotConfig() {
+      const old_group_id = document.getElementById('oldGroupSelect').value;
+      const new_group_id = document.getElementById('newGroupSelect').value;
+      const res = await fetch('/admin/bot/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ old_group_id, new_group_id }),
+      });
+      if (res.ok) {
+        showToast('הגדרות הבוט נשמרו');
+        fetch('/admin/bot/sync', { method: 'POST', headers: authHeaders() });
+        refreshBotStatus();
+      }
+    }
+
+    async function syncPending() {
+      await fetch('/admin/bot/sync', { method: 'POST', headers: authHeaders() });
+      showToast('סורק בקשות ממתינות...');
+      setTimeout(loadBotLog, 3000);
+    }
+
+    async function loadBotLog() {
+      const res = await fetch('/admin/bot/log', { headers: authHeaders() });
+      if (!res.ok) return;
+      const log = await res.json();
+      const tbody = document.getElementById('botLogBody');
+      const actionLabel = (a) => ({
+        approved: '<span class="choice-badge" style="background:#e8f5e9;color:#2e7d32">אושר</span>',
+        rejected: '<span class="choice-badge" style="background:#ffebee;color:#c62828">נדחה</span>',
+        error: '<span class="choice-badge" style="background:#fff3e0;color:#e65100">שגיאה</span>',
+      }[a] || a);
+      tbody.innerHTML = log.map(e => `
+        <tr>
+          <td class="phone-cell">${e.phone || '-'}</td>
+          <td>${actionLabel(e.action)}</td>
+          <td style="font-size:12px;">${e.reason || ''}</td>
+          <td>${new Date(e.created_at).toLocaleString('he-IL')}</td>
+        </tr>
+      `).join('');
+    }
+
+    let botInterval = null;
+    function startBotPolling() {
+      refreshBotStatus();
+      loadBotLog();
+      if (botInterval) return;
+      botInterval = setInterval(() => { refreshBotStatus(); loadBotLog(); }, 3000);
+    }
+
+    const _origLogin = login;
+    login = async function() {
+      await _origLogin();
+      if (!document.getElementById('adminPanel').classList.contains('hidden')) {
+        startBotPolling();
+      }
+    };
   </script>
 </body>
 </html>

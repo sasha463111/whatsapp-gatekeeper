@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const db = require('./database');
+const bot = require('./bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -210,7 +211,63 @@ app.get('/admin/log', adminAuth, (req, res) => {
   res.json(db.getAccessLog());
 });
 
+// --- Bot Routes ---
+
+app.get('/admin/bot/status', adminAuth, async (req, res) => {
+  const s = await bot.getStatus();
+  const counts = db.getBotActionCounts();
+  res.json({ ...s, ...counts });
+});
+
+app.get('/admin/bot/qr', adminAuth, (req, res) => {
+  const qr = bot.getQr();
+  res.json({ qr: qr || null });
+});
+
+app.post('/admin/bot/start', adminAuth, (req, res) => {
+  bot.start();
+  res.json({ success: true });
+});
+
+app.post('/admin/bot/logout', adminAuth, async (req, res) => {
+  await bot.logout();
+  res.json({ success: true });
+});
+
+app.get('/admin/bot/groups', adminAuth, async (req, res) => {
+  const groups = await bot.listGroups();
+  res.json(groups);
+});
+
+app.post('/admin/bot/config', adminAuth, (req, res) => {
+  const { old_group_id, new_group_id } = req.body;
+  if (old_group_id !== undefined) db.setConfig('old_group_id', old_group_id);
+  if (new_group_id !== undefined) db.setConfig('new_group_id', new_group_id);
+  res.json({ success: true });
+});
+
+app.get('/admin/bot/log', adminAuth, (req, res) => {
+  res.json(db.getBotActions(200));
+});
+
+// Trigger a catch-up on pending requests (also useful after config change)
+app.post('/admin/bot/sync', adminAuth, async (req, res) => {
+  bot.processPendingRequests().catch(err => console.error('sync error:', err.message));
+  res.json({ success: true });
+});
+
+// --- Health endpoint (for cron-job.org pinger to keep Render awake) ---
+app.get('/health', (req, res) => {
+  res.json({ ok: true, ts: Date.now() });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Admin panel: http://localhost:${PORT}/admin`);
+  // Auto-start bot if WhatsApp session already exists on disk
+  const fs = require('fs');
+  if (fs.existsSync(path.join(__dirname, '.wwebjs_auth'))) {
+    console.log('Auto-starting bot (existing session found)');
+    bot.start();
+  }
 });

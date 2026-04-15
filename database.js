@@ -33,6 +33,15 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     used INTEGER DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS bot_actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone TEXT,
+    action TEXT,           -- 'approved', 'rejected', 'error'
+    reason TEXT,
+    group_id TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Add choice column to access_log if it doesn't exist (migration for existing DBs)
@@ -121,6 +130,25 @@ function consumeToken(token) {
   return row.phone;
 }
 
+// Bot action log
+function logBotAction(phone, action, reason, groupId) {
+  db.prepare(
+    'INSERT INTO bot_actions (phone, action, reason, group_id) VALUES (?, ?, ?, ?)'
+  ).run(phone || null, action, reason || null, groupId || null);
+}
+
+function getBotActions(limit = 100) {
+  return db
+    .prepare('SELECT phone, action, reason, group_id, created_at FROM bot_actions ORDER BY created_at DESC LIMIT ?')
+    .all(limit);
+}
+
+function getBotActionCounts() {
+  const approved = db.prepare("SELECT COUNT(*) as c FROM bot_actions WHERE action = 'approved'").get().c;
+  const rejected = db.prepare("SELECT COUNT(*) as c FROM bot_actions WHERE action = 'rejected'").get().c;
+  return { approved, rejected };
+}
+
 module.exports = {
   getConfig,
   setConfig,
@@ -133,4 +161,7 @@ module.exports = {
   recordAttempt,
   createToken,
   consumeToken,
+  logBotAction,
+  getBotActions,
+  getBotActionCounts,
 };
