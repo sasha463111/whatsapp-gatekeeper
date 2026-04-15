@@ -10,3 +10,5 @@ parse-csv.js
 # WhatsApp Web session (contains auth tokens — never commit)
 .wwebjs_auth/
 .wwebjs_cache/
+# Puppeteer's Chrome download (~200MB, installed at build time)
+.cache/
