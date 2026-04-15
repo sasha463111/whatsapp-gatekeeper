@@ -28,6 +28,20 @@ let status = 'disconnected'; // 'disconnected' | 'qr' | 'authenticating' | 'read
 let latestQr = null;         // data URL of the current QR code (only while status === 'qr')
 let lastError = null;
 
+// Ring buffer of recent bot events for debugging via admin panel
+const logBuffer = [];
+const LOG_CAP = 200;
+function blog(level, ...parts) {
+  const line = `[${new Date().toISOString()}] [${level}] ${parts.join(' ')}`;
+  logBuffer.push(line);
+  if (logBuffer.length > LOG_CAP) logBuffer.shift();
+  if (level === 'error') console.error(line);
+  else console.log(line);
+}
+function getLogs() {
+  return logBuffer.slice();
+}
+
 // Normalize a WhatsApp JID (e.g. "972526059554@c.us") → local Israeli mobile "0526059554".
 function jidToPhone(jid) {
   if (!jid) return '';
@@ -127,40 +141,57 @@ function start() {
     },
   });
 
+  blog('info', 'starting client (chromePath =', chromePath || '<default>', ')');
+
   client.on('qr', async (qr) => {
-    latestQr = await QRCode.toDataURL(qr);
-    status = 'qr';
-    console.log('[bot] QR code ready — scan from admin panel');
+    try {
+      latestQr = await QRCode.toDataURL(qr);
+      status = 'qr';
+      blog('info', 'QR ready (len', qr.length, ')');
+    } catch (err) {
+      blog('error', 'QR render failed:', err.message);
+    }
   });
 
-  client.on('authenticated', () => {
+  client.on('loading_screen', (percent, msg) => {
+    blog('info', `loading_screen ${percent}% — ${msg}`);
+  });
+
+  client.on('authenticated', (session) => {
     status = 'authenticating';
     latestQr = null;
-    console.log('[bot] authenticated');
+    blog('info', 'authenticated event fired');
   });
 
   client.on('ready', async () => {
     status = 'ready';
     latestQr = null;
-    console.log('[bot] ready');
-    // Catch up on any pending requests from when we were offline
-    await processPendingRequests();
+    blog('info', 'READY event fired — client connected');
+    try {
+      await processPendingRequests();
+    } catch (err) {
+      blog('error', 'processPendingRequests threw:', err.message);
+    }
   });
 
   client.on('auth_failure', (msg) => {
     status = 'error';
     lastError = 'auth failure: ' + msg;
-    console.error('[bot] auth_failure:', msg);
+    blog('error', 'auth_failure:', msg);
+  });
+
+  client.on('change_state', (s) => {
+    blog('info', 'change_state:', s);
   });
 
   client.on('disconnected', (reason) => {
     status = 'disconnected';
-    console.log('[bot] disconnected:', reason);
+    blog('info', 'disconnected:', reason);
   });
 
   // Live membership request event
   client.on('group_membership_request', async (notification) => {
-    console.log('[bot] membership request:', notification.chatId, notification.author);
+    blog('info', 'membership_request', notification.chatId, notification.author);
     await handleRequest({
       chatId: notification.chatId,
       authorId: notification.author,
@@ -170,7 +201,7 @@ function start() {
   client.initialize().catch(err => {
     status = 'error';
     lastError = err.message;
-    console.error('[bot] initialize failed:', err.message);
+    blog('error', 'initialize() rejected:', err.message, err.stack || '');
   });
 }
 
@@ -250,4 +281,5 @@ module.exports = {
   getQr,
   listGroups,
   processPendingRequests,
+  getLogs,
 };

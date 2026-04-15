@@ -250,6 +250,12 @@ app.get('/admin/bot/log', adminAuth, (req, res) => {
   res.json(db.getBotActions(200));
 });
 
+// Live debug log (in-memory ring buffer from bot.js) — useful for diagnosing
+// why the QR scan isn't producing an "authenticated" event, etc.
+app.get('/admin/bot/debug', adminAuth, (req, res) => {
+  res.json({ logs: bot.getLogs() });
+});
+
 // Trigger a catch-up on pending requests (also useful after config change)
 app.post('/admin/bot/sync', adminAuth, async (req, res) => {
   bot.processPendingRequests().catch(err => console.error('sync error:', err.message));
