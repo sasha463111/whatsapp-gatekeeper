@@ -3,3 +3,7 @@ gatekeeper.db
 gatekeeper.db-wal
 gatekeeper.db-shm
 .env
+# Plaintext phone list — PII, never commit. Only approved-hashes.json is committed.
+approved-phones.json
+# Local helper, not needed in deployment
+parse-csv.js

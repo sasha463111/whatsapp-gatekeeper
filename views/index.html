@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>הצטרפות לקבוצה</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,7 +22,7 @@
       background: white;
       border-radius: 20px;
       padding: 40px 30px;
-      max-width: 420px;
+      max-width: 440px;
       width: 100%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       text-align: center;
@@ -38,28 +39,25 @@
       justify-content: center;
     }
 
-    .logo svg {
-      width: 45px;
-      height: 45px;
-      fill: white;
-    }
+    .logo svg { width: 45px; height: 45px; fill: white; }
 
-    h1 {
-      color: #1a1a1a;
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
+    h1 { color: #1a1a1a; font-size: 24px; margin-bottom: 10px; }
 
     .subtitle {
       color: #666;
       font-size: 15px;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       line-height: 1.5;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    .step-title {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: 600;
     }
+
+    .form-group { margin-bottom: 20px; }
 
     .phone-input {
       width: 100%;
@@ -74,14 +72,8 @@
       letter-spacing: 1px;
     }
 
-    .phone-input:focus {
-      border-color: #25d366;
-    }
-
-    .phone-input::placeholder {
-      color: #bbb;
-      letter-spacing: 0;
-    }
+    .phone-input:focus { border-color: #25d366; }
+    .phone-input::placeholder { color: #bbb; letter-spacing: 0; }
 
     .btn {
       width: 100%;
@@ -98,67 +90,79 @@
 
     .btn:hover { background: #1da851; }
     .btn:active { transform: scale(0.98); }
-    .btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
+    .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    .choice-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; text-align: right; }
+
+    .choice-card {
+      display: block;
+      padding: 16px 18px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
     }
 
-    .result {
-      margin-top: 25px;
-      padding: 20px;
-      border-radius: 12px;
-      display: none;
-      animation: fadeIn 0.3s ease;
+    .choice-card:hover { border-color: #25d366; background: #f1fbf4; }
+
+    .choice-card input[type="radio"] { display: none; }
+
+    .choice-card.selected {
+      border-color: #25d366;
+      background: #e8f5e9;
+      box-shadow: 0 2px 8px rgba(37,211,102,0.2);
     }
+
+    .choice-title { font-weight: 600; color: #1a1a1a; font-size: 16px; margin-bottom: 4px; }
+    .choice-desc { color: #666; font-size: 13px; line-height: 1.4; }
+
+    .result { margin-top: 20px; padding: 20px; border-radius: 12px; display: none; animation: fadeIn 0.3s ease; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .result.success {
-      display: block;
-      background: #e8f5e9;
-      border: 1px solid #a5d6a7;
-    }
+    .result.success { display: block; background: #e8f5e9; border: 1px solid #a5d6a7; }
+    .result.error { display: block; background: #ffebee; border: 1px solid #ef9a9a; color: #c62828; }
 
-    .result.error {
-      display: block;
-      background: #ffebee;
-      border: 1px solid #ef9a9a;
-      color: #c62828;
-    }
+    .result-message { font-size: 16px; margin-bottom: 15px; font-weight: 500; }
 
-    .result-message {
-      font-size: 16px;
-      margin-bottom: 15px;
-      font-weight: 500;
-    }
-
+    /* Open-whatsapp button: deliberately NOT an <a> with href.
+       It's a <button> that triggers server-side redirect via a one-time token.
+       User cannot right-click → copy link. */
     .whatsapp-btn {
       display: inline-block;
-      padding: 12px 30px;
+      padding: 14px 32px;
       background: #25d366;
       color: white;
-      text-decoration: none;
+      border: none;
       border-radius: 10px;
       font-size: 17px;
       font-weight: 600;
+      cursor: pointer;
       transition: background 0.3s;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .whatsapp-btn:hover { background: #1da851; }
+    .whatsapp-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    .timer {
-      margin-top: 12px;
-      color: #888;
-      font-size: 14px;
-    }
+    .timer { margin-top: 12px; color: #888; font-size: 14px; }
+    .timer strong { color: #c62828; font-size: 18px; }
 
-    .timer strong {
-      color: #c62828;
-      font-size: 18px;
+    .warning {
+      margin-top: 15px;
+      padding: 12px;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      color: #856404;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .spinner {
@@ -185,35 +189,59 @@
       </svg>
     </div>
 
-    <h1>הצטרפות לקבוצה</h1>
-    <p class="subtitle">הזינו את מספר הטלפון שלכם לאימות</p>
+    <h1>הצטרפות לקבוצה החדשה</h1>
+    <p class="subtitle">אימות חד-פעמי עבור חברי הקבוצה המאושרים</p>
 
-    <div id="formSection">
+    <!-- Step 1: Phone input -->
+    <div id="step-phone">
+      <div class="step-title">הזינו את מספר הטלפון שלכם</div>
       <div class="form-group">
         <input
           type="tel"
           id="phoneInput"
           class="phone-input"
           placeholder="050-1234567"
-          maxlength="15"
+          maxlength="20"
           autocomplete="tel"
         >
       </div>
-      <button class="btn" id="submitBtn" onclick="validatePhone()">אימות והצטרפות</button>
+      <button class="btn" id="submitBtn" onclick="validatePhone()">אימות</button>
       <div class="spinner" id="spinner"></div>
     </div>
 
-    <div id="resultSuccess" class="result success">
-      <div class="result-message" id="successMessage"></div>
-      <a id="whatsappLink" class="whatsapp-btn" target="_blank" rel="noopener">
-        פתח את הקבוצה בוואטסאפ
-      </a>
-      <div class="timer">
-        הלינק ייעלם בעוד <strong id="countdown">30</strong> שניות
+    <!-- Step 2: Choice selection -->
+    <div id="step-choice" class="hidden">
+      <div class="step-title">מה תרצה/י לעשות?</div>
+      <div class="choice-list">
+        <label class="choice-card" data-value="only_new">
+          <input type="radio" name="choice" value="only_new">
+          <div class="choice-title">לעבור רק לקבוצה החדשה</div>
+          <div class="choice-desc">תצטרפ/י לקבוצה החדשה ותעזב/י את הקבוצה הישנה</div>
+        </label>
+        <label class="choice-card" data-value="both">
+          <input type="radio" name="choice" value="both">
+          <div class="choice-title">להיות בשתי הקבוצות</div>
+          <div class="choice-desc">תצטרפ/י לחדשה ותישאר/י גם בישנה (מוגבל ל-300 אנשים)</div>
+        </label>
       </div>
+      <button class="btn" id="claimBtn" onclick="claimLink()" disabled>קבל את הלינק</button>
+      <div class="spinner" id="spinner2"></div>
     </div>
 
-    <div id="resultError" class="result error">
+    <!-- Step 3: One-time link -->
+    <div id="step-link" class="hidden">
+      <div class="result success">
+        <div class="result-message" id="successMessage">הלינק שלך מוכן!</div>
+        <button class="whatsapp-btn" id="openWhatsappBtn" onclick="openWhatsapp()">פתח את הקבוצה בוואטסאפ</button>
+        <div class="timer">
+          הלינק ייעלם בעוד <strong id="countdown">60</strong> שניות
+        </div>
+      </div>
+      <div class="warning" id="choiceReminder"></div>
+    </div>
+
+    <!-- Error block -->
+    <div id="errorBox" class="result error hidden">
       <div class="result-message" id="errorMessage"></div>
     </div>
   </div>
@@ -222,24 +250,44 @@
     const phoneInput = document.getElementById('phoneInput');
     const submitBtn = document.getElementById('submitBtn');
     const spinner = document.getElementById('spinner');
+    const spinner2 = document.getElementById('spinner2');
+    const claimBtn = document.getElementById('claimBtn');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
 
-    // Allow submit on Enter
+    let validatedPhone = null;
+    let selectedChoice = null;
+    let currentToken = null;
+
     phoneInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') validatePhone();
     });
 
+    // Choice card selection
+    document.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedChoice = card.getAttribute('data-value');
+        card.querySelector('input[type="radio"]').checked = true;
+        claimBtn.disabled = false;
+      });
+    });
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorBox.classList.add('hidden');
+    }
+
     async function validatePhone() {
       const phone = phoneInput.value.trim();
-      if (!phone) {
-        phoneInput.focus();
-        return;
-      }
+      if (!phone) { phoneInput.focus(); return; }
 
-      // Hide previous results
-      document.getElementById('resultSuccess').className = 'result success hidden';
-      document.getElementById('resultError').className = 'result error hidden';
-
-      // Show loading
+      hideError();
       submitBtn.disabled = true;
       spinner.style.display = 'block';
 
@@ -251,38 +299,92 @@
         });
         const data = await res.json();
 
-        if (data.success) {
-          document.getElementById('successMessage').textContent = data.message;
-          document.getElementById('whatsappLink').href = data.link;
-          document.getElementById('resultSuccess').className = 'result success';
-          document.getElementById('formSection').classList.add('hidden');
-          startCountdown();
+        if (data.success && data.approved) {
+          validatedPhone = data.phone;
+          document.getElementById('step-phone').classList.add('hidden');
+          document.getElementById('step-choice').classList.remove('hidden');
         } else {
-          document.getElementById('errorMessage').textContent = data.message;
-          document.getElementById('resultError').className = 'result error';
+          showError(data.message || 'שגיאה');
         }
       } catch (err) {
-        document.getElementById('errorMessage').textContent = 'שגיאה בחיבור לשרת. נסו שוב.';
-        document.getElementById('resultError').className = 'result error';
+        showError('שגיאה בחיבור לשרת. נסו שוב.');
       }
 
       submitBtn.disabled = false;
       spinner.style.display = 'none';
     }
 
+    async function claimLink() {
+      if (!selectedChoice || !validatedPhone) return;
+
+      hideError();
+      claimBtn.disabled = true;
+      spinner2.style.display = 'block';
+
+      try {
+        const res = await fetch('/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: validatedPhone, choice: selectedChoice }),
+        });
+        const data = await res.json();
+
+        if (data.success && data.token) {
+          currentToken = data.token;
+          document.getElementById('step-choice').classList.add('hidden');
+          document.getElementById('step-link').classList.remove('hidden');
+
+          // Show reminder based on choice
+          const reminder = document.getElementById('choiceReminder');
+          if (selectedChoice === 'only_new') {
+            reminder.innerHTML = '💡 <strong>תזכורת:</strong> אחרי שתצטרפ/י לקבוצה החדשה, זכור/י לעזוב את הקבוצה הישנה.';
+          } else {
+            reminder.innerHTML = '💡 <strong>תזכורת:</strong> בחרת להישאר בשתי הקבוצות. תצטרפ/י לחדשה ותישאר/י גם בישנה.';
+          }
+
+          startCountdown();
+        } else {
+          // Go back to phone step if server says no
+          document.getElementById('step-choice').classList.add('hidden');
+          document.getElementById('step-phone').classList.remove('hidden');
+          showError(data.message || 'שגיאה');
+        }
+      } catch (err) {
+        showError('שגיאה בחיבור לשרת. נסו שוב.');
+      }
+
+      spinner2.style.display = 'none';
+    }
+
+    function openWhatsapp() {
+      if (!currentToken) return;
+      // Open in new tab. The server redirects the token to the real WhatsApp URL once.
+      window.open('/open/' + currentToken, '_blank', 'noopener,noreferrer');
+      // Disable so they can't click again
+      document.getElementById('openWhatsappBtn').disabled = true;
+    }
+
     function startCountdown() {
-      let seconds = 30;
+      let seconds = 60;
       const countdownEl = document.getElementById('countdown');
       const interval = setInterval(() => {
         seconds--;
-        countdownEl.textContent = seconds;
+        if (countdownEl) countdownEl.textContent = seconds;
         if (seconds <= 0) {
           clearInterval(interval);
-          document.getElementById('resultSuccess').innerHTML =
-            '<div class="result-message">הלינק פג תוקף. ניתן לקבל פעם אחת בלבד.</div>';
+          currentToken = null;
+          const stepLink = document.getElementById('step-link');
+          stepLink.innerHTML =
+            '<div class="result success"><div class="result-message">הלינק פג תוקף. ניתן לקבל פעם אחת בלבד.</div></div>';
         }
       }, 1000);
     }
+
+    // Block right-click on the whatsapp button — doesn't prevent determined users
+    // but stops casual "copy link" attempts.
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('#openWhatsappBtn')) e.preventDefault();
+    });
   </script>
 </body>
 </html>

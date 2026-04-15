@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>ניהול - Gatekeeper</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,7 +16,7 @@
     }
 
     .login-container, .admin-container {
-      max-width: 600px;
+      max-width: 700px;
       margin: 40px auto;
       background: white;
       border-radius: 16px;
@@ -23,120 +24,86 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
 
-    h1 {
-      color: #1a1a1a;
-      margin-bottom: 25px;
-      font-size: 22px;
-    }
+    h1 { color: #1a1a1a; margin-bottom: 25px; font-size: 22px; }
 
     h2 {
-      color: #333;
-      font-size: 18px;
-      margin: 25px 0 15px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+      color: #333; font-size: 18px; margin: 25px 0 15px;
+      padding-top: 20px; border-top: 1px solid #eee;
     }
 
     h2:first-of-type { border-top: none; padding-top: 0; margin-top: 5px; }
 
-    label {
-      display: block;
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
+    label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; font-weight: 500; }
 
     input[type="text"], input[type="password"], input[type="url"] {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1.5px solid #ddd;
-      border-radius: 10px;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.3s;
-      direction: ltr;
-      margin-bottom: 15px;
+      width: 100%; padding: 12px 15px; border: 1.5px solid #ddd; border-radius: 10px;
+      font-size: 15px; outline: none; transition: border-color 0.3s; direction: ltr; margin-bottom: 15px;
     }
 
     input:focus { border-color: #075e54; }
 
     .btn {
-      padding: 12px 25px;
-      background: #075e54;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s;
+      padding: 12px 25px; background: #075e54; color: white; border: none;
+      border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.3s;
     }
 
     .btn:hover { background: #064e46; }
-
-    .btn-secondary {
-      background: #666;
-    }
-
+    .btn-secondary { background: #666; }
     .btn-secondary:hover { background: #555; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
 
     .stat-box {
       background: #e8f5e9;
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px;
       text-align: center;
-      margin-bottom: 20px;
     }
 
-    .stat-number {
-      font-size: 42px;
-      font-weight: 700;
-      color: #2e7d32;
-    }
+    .stat-box.blue { background: #e3f2fd; }
+    .stat-box.orange { background: #fff3e0; }
+    .stat-box.purple { background: #f3e5f5; }
 
-    .stat-label {
-      color: #555;
-      font-size: 14px;
-      margin-top: 5px;
-    }
+    .stat-number { font-size: 32px; font-weight: 700; color: #2e7d32; }
+    .stat-box.blue .stat-number { color: #1565c0; }
+    .stat-box.orange .stat-number { color: #e65100; }
+    .stat-box.purple .stat-number { color: #6a1b9a; }
+
+    .stat-label { color: #555; font-size: 13px; margin-top: 4px; }
 
     .log-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 14px;
+      width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;
     }
 
     .log-table th {
-      background: #f5f5f5;
-      padding: 10px 12px;
-      text-align: right;
-      font-weight: 600;
-      color: #333;
+      background: #f5f5f5; padding: 10px 12px; text-align: right; font-weight: 600; color: #333;
     }
 
     .log-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
-      color: #555;
-      direction: ltr;
-      text-align: right;
+      padding: 10px 12px; border-bottom: 1px solid #eee; color: #555; text-align: right;
     }
 
+    .log-table td.phone-cell { direction: ltr; text-align: right; font-family: monospace; }
+
+    .choice-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .choice-only_new { background: #fff3e0; color: #e65100; }
+    .choice-both { background: #e3f2fd; color: #1565c0; }
+
     .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 12px 25px;
-      border-radius: 8px;
-      font-size: 14px;
-      display: none;
-      z-index: 100;
-      animation: fadeIn 0.3s;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #333; color: white; padding: 12px 25px; border-radius: 8px;
+      font-size: 14px; display: none; z-index: 100; animation: fadeIn 0.3s;
     }
 
     .hidden { display: none; }
@@ -149,7 +116,6 @@
 </head>
 <body>
 
-  <!-- Login Screen -->
   <div class="login-container" id="loginScreen">
     <h1>כניסת מנהל</h1>
     <label>סיסמה</label>
@@ -158,13 +124,26 @@
     <button class="btn" onclick="login()">כניסה</button>
   </div>
 
-  <!-- Admin Panel -->
   <div class="admin-container hidden" id="adminPanel">
     <h1>לוח בקרה</h1>
 
-    <div class="stat-box">
-      <div class="stat-number" id="accessCount">0</div>
-      <div class="stat-label">אנשים קיבלו את הלינק</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-number" id="accessCount">0</div>
+        <div class="stat-label">קיבלו לינק</div>
+      </div>
+      <div class="stat-box blue">
+        <div class="stat-number" id="approvedCount">0</div>
+        <div class="stat-label">מאושרים ברשימה</div>
+      </div>
+      <div class="stat-box orange">
+        <div class="stat-number" id="onlyNewCount">0</div>
+        <div class="stat-label">רק לחדשה</div>
+      </div>
+      <div class="stat-box purple">
+        <div class="stat-number" id="bothCount">0</div>
+        <div class="stat-label">בשתי הקבוצות</div>
+      </div>
     </div>
 
     <h2>הגדרות</h2>
@@ -172,10 +151,7 @@
     <label>לינק קבוצת וואטסאפ</label>
     <input type="url" id="whatsappLink" placeholder="https://chat.whatsapp.com/...">
 
-    <label>לינק Google Sheet (CSV)</label>
-    <input type="url" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
-
-    <button class="btn" onclick="saveConfig()">שמור הגדרות</button>
+    <button class="btn" onclick="saveConfig()">שמור</button>
 
     <h2>שינוי סיסמה</h2>
     <label>סיסמה חדשה</label>
@@ -187,6 +163,7 @@
       <thead>
         <tr>
           <th>טלפון</th>
+          <th>בחירה</th>
           <th>תאריך</th>
         </tr>
       </thead>
@@ -214,9 +191,11 @@
           const data = await res.json();
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('adminPanel').classList.remove('hidden');
-          document.getElementById('whatsappLink').value = data.whatsapp_link;
-          document.getElementById('sheetUrl').value = data.sheet_url;
+          document.getElementById('whatsappLink').value = data.whatsapp_link || '';
           document.getElementById('accessCount').textContent = data.access_count;
+          document.getElementById('approvedCount').textContent = data.approved_count;
+          document.getElementById('onlyNewCount').textContent = data.only_new_count;
+          document.getElementById('bothCount').textContent = data.both_count;
           loadLog();
         } else {
           showToast('סיסמה שגויה');
@@ -229,54 +208,42 @@
     async function saveConfig() {
       const res = await fetch('/admin/config', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Password': adminPassword,
-        },
-        body: JSON.stringify({
-          whatsapp_link: document.getElementById('whatsappLink').value,
-          sheet_url: document.getElementById('sheetUrl').value,
-        }),
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
+        body: JSON.stringify({ whatsapp_link: document.getElementById('whatsappLink').value }),
       });
-
-      if (res.ok) {
-        showToast('ההגדרות נשמרו בהצלחה');
-      } else {
-        showToast('שגיאה בשמירה');
-      }
+      showToast(res.ok ? 'ההגדרות נשמרו' : 'שגיאה בשמירה');
     }
 
     async function changePassword() {
       const newPass = document.getElementById('newPassword').value;
       if (!newPass) return showToast('יש להזין סיסמה חדשה');
-
       const res = await fetch('/admin/config', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Password': adminPassword,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
         body: JSON.stringify({ new_password: newPass }),
       });
-
       if (res.ok) {
         adminPassword = newPass;
         document.getElementById('newPassword').value = '';
-        showToast('הסיסמה עודכנה בהצלחה');
+        showToast('הסיסמה עודכנה');
       }
     }
 
-    async function loadLog() {
-      const res = await fetch('/admin/log', {
-        headers: { 'X-Admin-Password': adminPassword },
-      });
+    function choiceLabel(choice) {
+      if (choice === 'only_new') return '<span class="choice-badge choice-only_new">רק לחדשה</span>';
+      if (choice === 'both') return '<span class="choice-badge choice-both">בשתיהן</span>';
+      return choice || '-';
+    }
 
+    async function loadLog() {
+      const res = await fetch('/admin/log', { headers: { 'X-Admin-Password': adminPassword } });
       if (res.ok) {
         const log = await res.json();
         const tbody = document.getElementById('logBody');
         tbody.innerHTML = log.map(entry => `
           <tr>
-            <td>${entry.phone}</td>
+            <td class="phone-cell">${entry.phone}</td>
+            <td>${choiceLabel(entry.choice)}</td>
             <td>${new Date(entry.created_at).toLocaleString('he-IL')}</td>
           </tr>
         `).join('');
