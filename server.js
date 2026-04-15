@@ -32,10 +32,20 @@ function loadApprovedHashes() {
 }
 loadApprovedHashes();
 
-// Normalize phone: strip non-digits, convert Israeli 972XXXXXXXXX → 0XXXXXXXXX
+// Normalize phone: strip everything except digits, then try to produce a canonical form.
+// Handles:
+//   050-123-4567, 050 123 4567, (050) 123-4567 → 0501234567
+//   +972 50 123 4567, 972501234567, 00972501234567 → 0501234567
+//   501234567 (Israeli mobile typed without leading 0) → 0501234567
+//   international numbers (e.g. +14252723232) → 14252723232
 function normalizePhone(phone) {
   let c = String(phone).replace(/[^\d]/g, '');
-  if (c.startsWith('972') && c.length > 9) c = '0' + c.slice(3);
+  // Strip common international exit prefix (00 = international dialing)
+  if (c.startsWith('00')) c = c.slice(2);
+  // Israeli country code → local
+  if (c.startsWith('972')) c = '0' + c.slice(3);
+  // Israeli mobile typed without leading 0 (9 digits starting with 5)
+  if (c.length === 9 && c.startsWith('5')) c = '0' + c;
   return c;
 }
 

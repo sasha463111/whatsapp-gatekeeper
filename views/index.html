@@ -200,10 +200,12 @@
           type="tel"
           id="phoneInput"
           class="phone-input"
-          placeholder="050-1234567"
+          placeholder="050-123-4567"
           maxlength="20"
+          inputmode="numeric"
           autocomplete="tel"
         >
+        <div id="phoneHint" style="font-size:13px; color:#888; margin-top:-10px; margin-bottom:20px; min-height:18px;"></div>
       </div>
       <button class="btn" id="submitBtn" onclick="validatePhone()">אימות</button>
       <div class="spinner" id="spinner"></div>
@@ -263,6 +265,55 @@
       if (e.key === 'Enter') validatePhone();
     });
 
+    // Live formatting: Israeli mobile → 050-123-4567
+    // Keeps cursor behavior simple; users can paste any format and we reformat.
+    const phoneHint = document.getElementById('phoneHint');
+
+    function normalizeDigits(raw) {
+      let c = raw.replace(/[^\d]/g, '');
+      if (c.startsWith('00')) c = c.slice(2);
+      if (c.startsWith('972')) c = '0' + c.slice(3);
+      if (c.length === 9 && c.startsWith('5')) c = '0' + c;
+      return c;
+    }
+
+    function formatIsraeliMobile(digits) {
+      // 050-123-4567 format for 10-digit numbers starting with 0
+      if (digits.length <= 3) return digits;
+      if (digits.length <= 6) return digits.slice(0, 3) + '-' + digits.slice(3);
+      return digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+    }
+
+    phoneInput.addEventListener('input', (e) => {
+      const digits = normalizeDigits(e.target.value);
+      // Only auto-format Israeli 10-digit numbers (start with 0, length up to 10)
+      if (digits.startsWith('0') && digits.length <= 10) {
+        e.target.value = formatIsraeliMobile(digits);
+      } else {
+        // International or unusual — just keep digits
+        e.target.value = digits;
+      }
+
+      // Hint about validity
+      if (!digits) {
+        phoneHint.textContent = '';
+        phoneHint.style.color = '#888';
+      } else if (digits.startsWith('05') && digits.length < 10) {
+        phoneHint.textContent = `חסרות ${10 - digits.length} ספרות`;
+        phoneHint.style.color = '#888';
+      } else if (digits.startsWith('05') && digits.length > 10) {
+        phoneHint.textContent = `יותר מדי ספרות (${digits.length} במקום 10)`;
+        phoneHint.style.color = '#c62828';
+      } else if (digits.startsWith('05') && digits.length === 10) {
+        phoneHint.textContent = '✓';
+        phoneHint.style.color = '#2e7d32';
+      } else if (digits.length >= 7) {
+        phoneHint.textContent = '';
+      } else {
+        phoneHint.textContent = '';
+      }
+    });
+
     // Choice card selection
     document.querySelectorAll('.choice-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -284,8 +335,22 @@
     }
 
     async function validatePhone() {
-      const phone = phoneInput.value.trim();
-      if (!phone) { phoneInput.focus(); return; }
+      const raw = phoneInput.value.trim();
+      if (!raw) { phoneInput.focus(); return; }
+
+      const digits = normalizeDigits(raw);
+
+      // Client-side format validation for Israeli mobile numbers
+      if (digits.startsWith('05') && digits.length !== 10) {
+        showError(`המספר לא תקין — מספר נייד ישראלי חייב להיות 10 ספרות (הזנת ${digits.length}).`);
+        return;
+      }
+      if (digits.length < 7) {
+        showError('מספר קצר מדי.');
+        return;
+      }
+
+      const phone = digits;
 
       hideError();
       submitBtn.disabled = true;
